@@ -1,11 +1,14 @@
 import socket
 import json
 from typing import Any
+from data import *
+from request_processing import *
 
 
 def main():
     server = Server('127.0.0.1', 3000)
     server.start_server()
+
 
 
 class Data:
@@ -25,8 +28,9 @@ class Server:
             print(f'Client connected\n\tIP: {from_addr[0]} Port: {from_addr[1]}')
             string = ' '
             string = new_socket.recv(1024)
-            data = Data(string)
-            print(data.Type)
+            raw_data = Raw_request(string, from_addr[0])
+            data = raw_data.generate_type_raw()
+            request_handler(data)
 
 
 if __name__ == "__main__":
