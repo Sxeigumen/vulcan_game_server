@@ -41,6 +41,7 @@ def generate_id(device, device_ip):
                     if int(temp_list[1]) == gen_id:
                         gen_id = generate_id(device, device_ip)
                         break
+            break
         if not flag:
             file.write(f'{device}:{gen_id}:{device_ip}')
             flag = True
