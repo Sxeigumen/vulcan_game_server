@@ -10,24 +10,28 @@ import json
 }}
 пока так
 """
-
+"""
+У нас есть проблема связанная с изменнением ip в сети
+если у нас до инициализации человек связывается с не известным
+нам ip нужно выбрасывать исключения, для корректной работы
+"""
 
 class Raw_request:
     def __init__(self, raw_message, device_ip):
-        self.__dict__ = json.loads(raw_message)
+        self.req_dict = json.loads(raw_message)
         self.device_ip = device_ip
 
     # сразу определяет по типу запроса что мы хотим вообще 
     def generate_type_raw(self):
         try:
-            if len(list(self.__dict__.keys())) == 1:
-                type_request = list(self.__dict__.keys())
-                data = self.__dict__[type_request[0]]
-                message = Request_message(type_request, data['device'], data['data'], self.device_ip)
+            if len(list(self.req_dict.keys())) == 1:
+                type_request = list(self.req_dict.keys())
+                data = self.req_dict[type_request[0]]
+                message = Request_message(type_request[0], data['device'], data['data'], self.device_ip)
                 return message
             else:
-                raise DefenitionTypeError
-        except DefenitionTypeError as e:
+                raise DefinitionTypeError
+        except DefinitionTypeError as e:
             print(e.args[0])
 
 
