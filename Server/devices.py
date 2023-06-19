@@ -11,6 +11,7 @@ class Smartphone:
     def __init__(self, device_id, device_ip):
         self.id = device_id
         self.ip = device_ip
+        self.connection_with_controller = False
         "Можно добавить ещё полей, но пока пусть будет так"
 
 

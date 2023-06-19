@@ -4,7 +4,7 @@ from Server.exceptions import *
 import json
 
 """наш запрос будет выглядеть следующим образом
-{"type"(Init,Sys,Trigger): {
+{"type"(Init,Sys,Trigger,Connect): {
     "device" : "...",
     "data" : "..."
 }}
