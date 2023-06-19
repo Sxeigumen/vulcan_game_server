@@ -30,7 +30,7 @@ class Server:
             string = new_socket.recv(1024)
             raw_data = Raw_request(string, from_addr[0])
             data = raw_data.generate_type_raw()
-            request_handler(data)
+            request_handler(new_socket, data)
 
 
 if __name__ == "__main__":
