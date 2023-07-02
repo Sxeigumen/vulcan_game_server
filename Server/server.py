@@ -1,5 +1,5 @@
 import socket
-import email
+from email import parser
 import json
 from typing import Any
 from data import *
@@ -77,7 +77,7 @@ class Server:
             if len(headers) > MAX_HEADER:
                 raise Exception('Too mane headers')
         headers_dict = b''.join(headers).decode('iso-8859-1')
-        return email.Parser().parsestr(headers_dict)
+        return parser.Parser().parsestr(headers_dict)
     
     def parse_request_line(self, rfile):
         raw = rfile.readline(MAX_LINE + 1)
@@ -100,7 +100,7 @@ class Server:
             return self.handle_get_controllers(request)
         if request.path == '/device' and request.method == 'INIT':
             return self.handle_init_device(request)
-        if request.path.startwith('/controller/') and request.method == 'GET':
+        if '/controller/' in request.path and request.method == 'GET':
             controller_id = request.path[len('/controller/'):]
             if controller_id.isdigit():
                 return self.handle_get_controller(request, controller_id)

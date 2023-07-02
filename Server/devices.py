@@ -17,8 +17,8 @@ class Smartphone:
 class DeviceConnection:
     def __init__(self, pair_id, controller, smartphone):
         self.id = pair_id
-        self.controller_ip = controller.ip
-        self.smartphone_ip = smartphone.ip
+        self.controller_ip = controller
+        self.smartphone_ip = smartphone
 
     """Надо будет подумать как генерить id, чтобы корректно работать. Типо чтоб они могли удаляться и создаваться без
         каких-то проблем. Это будем делать видимо в функции init_handler которая лежит в другом файле"""
