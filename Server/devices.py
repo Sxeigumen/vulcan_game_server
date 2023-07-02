@@ -1,4 +1,3 @@
-
 class Controller:
     def __init__(self, device_id, device_ip):
         self.id = device_id

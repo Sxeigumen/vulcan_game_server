@@ -16,30 +16,6 @@ def main():
 
 """Для начала хочу здесь реализовать API вида инициализации и создания пары"""
 
-class Request:
-    def __init__(self, method, uri, version, headers,rfile):
-        self.method = method
-        self.uri = uri
-        self.version = version
-        self.headers = headers
-        self.rfile = rfile
-
-    """
-    @property
-    def path(self):
-        return self.url.path
-    
-    @property
-    @lru_cache(maxsize=None)
-    def query(self):
-        return parse_qs(self.url.query)
-    
-    @property
-    @lru_cache(maxsize=None)
-    def url(self):
-        return urlparse(self.uri)"""
-
-
 class Server:
     def __init__(self, ip, port, server_name):
         self.ip = ip
@@ -55,6 +31,8 @@ class Server:
 
             while True:
                 new_socket, from_addr = server_socket.accept()
+                self.socket = new_socket
+                self.ip_connect = from_addr
                 try:
                     self.server_client(new_socket)
                 except Exception as e:
@@ -65,13 +43,12 @@ class Server:
     def server_client(self, socket):
         try:
            request = self.parse_request(socket)
-           responce = self.handle_request(request)
-           self.send_responce(socket, responce)
+           response = self.handle_request(request)
+           self.send_response(socket, response)
         except ConnectionResetError:
            socket = None
         except Exception as e:
            self.send_error(socket, e)
-
         if socket:
             socket.close()
 
@@ -86,7 +63,7 @@ class Server:
             raise Exception('Bad request')
         if host not in (self.server_name, f'{self.ip}:{self.port}'):
             raise Exception('Not right connection')
-        return Request(method, uri, version, headers, rfile)
+        return Request(method, uri, version, headers, rfile, self.ip_connect)
 
     def parse_request_header(self, rfile):
         headers = []
@@ -115,27 +92,46 @@ class Server:
 
 
     """GET /controller - получение всех инициализированных контроллеров
-    GET /controller/id - подключение смартфона к определенному контроллеру
-    INIT /controller - инициализация контроллера"""
+    POST /controller/id - подключение смартфона к определенному контроллеру
+    INIT /device - инициализация устроства"""
 
     def handle_request(self, request):
         if request.path == '/controller' and request.method == 'GET':
-            return self.handle_get_controller(request)
-        if request.path == '/controller' and request.method == 'INIT':
-            return self.handle_init_controller(request)
+            return self.handle_get_controllers(request)
+        if request.path == '/device' and request.method == 'INIT':
+            return self.handle_init_device(request)
+        if request.path.startwith('/controller/') and request.method == 'GET':
+            controller_id = request.path[len('/controller/'):]
+            if controller_id.isdigit():
+                return self.handle_get_controller(request, controller_id)
         
     
-    def handle_get_controller(self, request):
-        pass
+    def handle_get_controllers(self, request):
+        return connect_handler(self.socket, request)
+    
+    def handle_get_controller(self, request, id):
+        return connect_handler(self.socket, request, id)
 
-    def handle_init_controller(self, request):
-        pass
+    def handle_init_device(self, request):
+        return init_handler(self.socket, request)
 
-    def send_responce(self, socket, responce):
-        pass
+    def send_response(self, socket, response):
+        wfile = socket.makefile('wb')
+        status_line = f'HTTP/1.1 {response.status} {response.reason}\r\n'
+        wfile.write(status_line.encode('iso-8859-1'))
+        if response.headers:
+            for (key, value) in response.headers:
+                header_line = f'{key}: {value}\r\n'
+                wfile.write(header_line.encode('iso-8859-1'))
+        wfile.write(b'\r\n')
+        if response.body:
+            wfile.write(response.body)
+        wfile.flush()
+        wfile.close()
 
     def send_error(self, socket, error):
-        pass
+        response = Response('400', f'{error}')
+        self.send_response(socket, response)
            
 
 

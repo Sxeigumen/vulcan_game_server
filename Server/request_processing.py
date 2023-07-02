@@ -1,6 +1,6 @@
 import server
-from Server.data import *
 from devices import *
+from data import Request, Response
 import random
 import re
 from exceptions import *
@@ -12,24 +12,7 @@ connect_request = "Connect"
 max_count_of_string = 10000
 
 
-def request_handler(socket, data):
-    request_type = data.type
 
-    if  request_type == init_request:
-        init_handler(socket, data)
-        return
-    
-    elif request_type == system_request:
-        system_handler(socket, data)
-        return
-    
-    elif request_type == trigger_request:
-        trigger_handler(socket, data)
-        return
-    
-    elif request_type == connect_request:
-        connect_handler(socket, data)
-        return
 
 def generate_id(device, device_ip):
     gen_id = random.randint(1000,9999)   
@@ -62,7 +45,7 @@ def get_all_controller(name_of_controller = 'all'):
             temp_string = file.readline()
             if temp_string:
                 temp_list = temp_string.split(':')
-                if temp_list[0] == 'Controller' and bool(temp_list[-1]):
+                if temp_list[0] == 'Controller' and not bool(temp_list[-1]):
                     if name_of_controller == 'all':
                         all_controller.append(temp_string)
                     else:
@@ -87,20 +70,23 @@ def check_init_smartphone(data):
 """Идея по поводу генерирования id, пусть они генерируются как для контроллера, так и для телефона(4 цифры к примеру)
 а потом уже при подключении просто объединяем их айдишникик и все, получаем айди соединения"""
 #более сложный процесс необходимо кроме просто создания также отправлять информацию, что все прошло усепшно
-def init_handler(socket, data):
-    device = data.device
+def init_handler(socket, data : Request):
+    device = data.headers.get('Device')
+    device_ip = data.ip
     if device == 'Controller':
-        device_id = generate_id(device, data.device_ip)
-        new_controller = Controller(device_id, data.device_ip)
-        socket.sendall(b'OK')
-
+        device_id = generate_id(device, device_ip)
+        new_controller = Controller(device_id, device_ip)
+        response = Response(201, 'Created')
     elif device == 'Smartphone':
-        device_id = generate_id(device, data.device_ip)
-        new_smartphone = Smartphone(device_id, data.device_ip)
-        socket.sendall(b';'.join(get_all_controller()))
-        """после инициализации необходимо выдавать список всех зарегистрированных контроллеров"""
+        device_id = generate_id(device, device_ip)
+        new_smartphone = Smartphone(device_id, device_ip)
+        body = b''.join(get_all_controller())
+        headers = [('Content-Length', len(body))]
+        response = Response(200, 'OK', headers, body)
+    return response
+"""после инициализации необходимо выдавать список всех зарегистрированных контроллеров"""
 
-def init_pair(data_smartphone, data_controller):
+def init_pair(data_smartphone:Request, data_controller:str):
     smartphone_id = ''
     controller_id = ''
     with open('localbd.txt', 'r') as file:
@@ -113,12 +99,15 @@ def init_pair(data_smartphone, data_controller):
                     controller_id = temp_list[1]
                     continue
                 temp_list = temp_string.split(':')
-                if data_smartphone.device == temp_list[0] and data_smartphone.device_ip == temp_list[2] and bool(temp_list[-1]):
+                if (data_smartphone.headers.get('Device') == temp_list[0] 
+                                        and data_smartphone.ip == temp_list[2] 
+                                        and not bool(temp_list[-1])):
                     temp_string.replace('False', 'True')
                     smartphone_id = temp_list[1]
             else:
                 break
     new_pair = DeviceConnection(smartphone_id+controller_id, smartphone_id, controller_id)
+    return new_pair
 
 """пока не знаю как реализовать подключение, точно понимаю, что это sys запрос но пока 
 не до конца понимание"""
@@ -130,20 +119,24 @@ def system_handler(socket, data):
 генерирование пары, именно подключение с выбранным id controller, также я подумал, что можно сделать важную вещь
 например если сначала подключается смартфон, тогда он не выведит ничего полезного(то есть к чему можно подключиться)
 если подает запрос с параметром all, ему выведутся все доступные контроллеры"""
-def connect_handler(socket, data):
-    device = data.device
+def connect_handler(socket, data:Request, id = 'all'):
+    device = data.headers.get('Device')
     try:
         if not check_init_smartphone(data):
             raise NotInitSmartphone
         if device == 'Smartphone':
-            id_to_connect = data.data
-            if id_to_connect == 'all':
-                all_available_connections = get_all_controller()
-                socket.sendall(b';'.join(get_all_controller()))
+            if id == 'all':
+                body = b''.join(get_all_controller())
+                headers = [('Content-Length', len(body))]
+                response = Response(200, 'OK', headers, body)
+                return response
             else:
-                connection = get_all_controller(id_to_connect)
-                init_pair(data, connection)
-                socket.sendall(b'OK')
+                connection = get_all_controller(id)
+                pair = init_pair(data, connection)
+                body = b''.join(pair.id)
+                headers = [('Content-Length', len(body))]
+                response = Response(201, 'Created', headers, body)
+                return response
         else:
             raise DefinitionTypeError
     except DefinitionTypeError as e:
