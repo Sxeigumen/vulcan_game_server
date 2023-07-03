@@ -2,17 +2,12 @@ import server
 from devices import *
 import random
 import re
+import os
+import subprocess
 from exceptions import *
 import data
 
-init_request = "Init"
-system_request = "Sys"
-trigger_request = "Trigger"
-connect_request = "Connect"
 max_count_of_string = 10000
-
-
-
 
 def generate_id(device, device_ip):
     gen_id = random.randint(1000,9999)   
@@ -95,22 +90,29 @@ def init_handler(socket, request):
 def init_pair(data_smartphone, data_controller):
     smartphone_id = ''
     controller_id = ''
-    with open('localbd.txt', 'r') as file:
+    with open('localbd.txt', 'r') as file_read, open('localbd.tmp', 'w') as file_write:
         while True:
-            temp_string = file.readline()
+            temp_string = file_read.readline()
             if temp_string:
                 if data_controller == temp_string:
                     temp_string.replace('False', 'True')
+                    file_write.write(temp_string)
                     temp_list = data_controller.split(':')
                     controller_id = temp_list[1]
                     continue
-                temp_list = temp_string.split(':')
-                if (data_smartphone.headers.get('Device') == temp_list[0] 
+                elif (data_smartphone.headers.get('Device') == temp_list[0] 
                         and data_smartphone.ip[0] == (temp_list[2])[2:temp_list[2].rfind("'")]
                         and temp_list[-1].rstrip('\n') == 'False'):
+                    temp_list = temp_string.split(':')
                     temp_string.replace('False', 'True')
+                    file_write.write(temp_string)
                     smartphone_id = temp_list[1]
+                else:
+                    file_write.write(temp_string)
             else:
+                path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'localbd.txt')
+                os.remove(path)
+                os.rename('localbd.tmp', 'localbd.txt')
                 break
     new_pair = DeviceConnection(smartphone_id+controller_id, smartphone_id, controller_id)
     return new_pair
