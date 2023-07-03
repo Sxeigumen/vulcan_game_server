@@ -93,7 +93,8 @@ class Server:
 
     """GET /controller - получение всех инициализированных контроллеров
     POST /controller/id - подключение смартфона к определенному контроллеру
-    INIT /device - инициализация устроства"""
+    INIT /device - инициализация устроства
+    POST /trigger - отправка данных при триггере"""
 
     def handle_request(self, request):
         if request.path == '/controller' and request.method == 'GET':
@@ -104,8 +105,7 @@ class Server:
             controller_id = request.path[len('/controller/'):]
             if controller_id.isdigit():
                 return self.handle_get_controller(request, controller_id)
-        
-    
+
     def handle_get_controllers(self, request):
         return connect_handler(self.socket, request)
     
