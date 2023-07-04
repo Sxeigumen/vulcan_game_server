@@ -1,6 +1,7 @@
 import socket
 from email import parser
 import json
+from SQL_server.sql import *
 from typing import Any
 from data import *
 from request_processing import *
@@ -11,7 +12,7 @@ MAX_LINE = 64*1024
 MAX_HEADER = 100
 
 def main():
-    server = Server('127.0.0.1', 80, 'proxi')
+    server = Server('10.0.41.165', 80, 'proxi')
     server.server_forever()
 
 """Для начала хочу здесь реализовать API вида инициализации и создания пары"""
@@ -90,7 +91,6 @@ class Server:
             raise Exception('Incorrect request line')
         return words
 
-
     """GET /controller - получение всех инициализированных контроллеров
     POST /controller/id - подключение смартфона к определенному контроллеру
     INIT /device - инициализация устроства
@@ -128,7 +128,7 @@ class Server:
             wfile.write(response.body)
         wfile.flush()
         wfile.close()
-
+    #Необходимо нормально проделать обработчик ошибок, пока это просто 400
     def send_error(self, socket, error):
         response = Response('400', f'{error}')
         self.send_response(socket, response)

@@ -1,5 +1,5 @@
 """B данном файе будем обобщать вид входных данных, которые мы получаем"""
-from Server.exceptions import *
+from exceptions import *
 import json
 from functools import lru_cache
 from urllib.parse import parse_qs, urlparse
