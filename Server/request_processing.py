@@ -8,46 +8,13 @@ from exceptions import *
 import data
 
 max_count_of_string = 10000
-
-def generate_id(device, device_ip):
-    gen_id = random.randint(1000,9999)   
-    flag = False 
-    count_of_string = sum(1 for line in open('localbd.txt', 'r'))
-    if count_of_string > max_count_of_string:
-        raise LocalBdOverflow
-    with open('localbd.txt', 'a+') as file:
-        while True:
-            temp_string = file.readline()
-            if temp_string:
-                temp_list = temp_string.split(':')
-                if temp_list[0] != device:
-                    continue
-                else:
-                    if int(temp_list[1]) == gen_id:
-                        gen_id = generate_id(device, device_ip)
-                        break
-            else:
-                break
-        if not flag:
-            file.write(f'{device}:{gen_id}:{device_ip}:{False}\n')
-            flag = True
-    return gen_id
         
-def get_all_controller(name_of_controller = 'all'):
+def get_all_controller(database, id_controller = 'all'):
     all_controller = list()
-    with open('localbd.txt', 'r') as file:
-        while True:
-            temp_string = file.readline()
-            if temp_string:
-                temp_list = temp_string.split(':')
-                if temp_list[0] == 'Controller' and temp_list[-1].rstrip('\n') == "False":
-                    if name_of_controller == 'all':
-                        all_controller.append(temp_string)
-                    else:
-                        all_controller.append(temp_string)
-                        break
-            else:
-                break
+    if id_controller == 'all':
+        all_controller = database.Select('Controllers')
+    else:
+        all_controller = database.Select('Controllers', 'id', id_controller)
     return all_controller
 
 def check_init_smartphone(data):
@@ -67,24 +34,23 @@ def check_init_smartphone(data):
 """Идея по поводу генерирования id, пусть они генерируются как для контроллера, так и для телефона(4 цифры к примеру)
 а потом уже при подключении просто объединяем их айдишникик и все, получаем айди соединения"""
 #более сложный процесс необходимо кроме просто создания также отправлять информацию, что все прошло усепшно
-def init_handler(socket, request):
+def init_handler(socket, request, database):
     device = request.headers.get('Device')
     device_ip = request.ip
     if device == 'Controller':
-        device_id = generate_id(device, device_ip)
+        database.Insert('Controllers', 'ip', 'connection', device_ip, False)
+        device_id = database.Select('Controllers', 'ip', device_ip, 'id')
         new_controller = Controller(device_id, device_ip)
         response = data.Response("201", 'Created')
         return response
     elif device == 'Smartphone':
-        device_id = generate_id(device, device_ip)
+        database.Insert('Smartphones', 'ip', 'connection', device_ip, False)
+        device_id = database.Select('Smartphones', 'ip', device_ip, 'id')
         new_smartphone = Smartphone(device_id, device_ip)
-        body = str.encode(''.join(get_all_controller()), 'iso-8859-1')
-        print(get_all_controller())
-        print(body)
+        body = str.encode(''.join(get_all_controller(database)), 'iso-8859-1')
         headers = [('Content-Length', len(body))]
         response = data.Response("200", 'OK', headers, body)
         return response
-"""после инициализации необходимо выдавать список всех зарегистрированных контроллеров"""
 
 """надо перезаписывать"""
 def init_pair(data_smartphone, data_controller):
@@ -127,19 +93,19 @@ def system_handler(socket, data):
 генерирование пары, именно подключение с выбранным id controller, также я подумал, что можно сделать важную вещь
 например если сначала подключается смартфон, тогда он не выведит ничего полезного(то есть к чему можно подключиться)
 если подает запрос с параметром all, ему выведутся все доступные контроллеры"""
-def connect_handler(socket, request, id = 'all'):
+def connect_handler(socket, request, database, id = 'all'):
     device = request.headers.get('Device')
     try:
         if not check_init_smartphone(request):
             raise NotInitSmartphone
         if device == 'Smartphone':
             if id == 'all':
-                body = str.encode(''.join(get_all_controller()), 'iso-8859-1')
+                body = str.encode(''.join(get_all_controller(database)), 'iso-8859-1')
                 headers = [('Content-Length', len(body))]
                 response = data.Response(200, 'OK', headers, body)
                 return response
             else:
-                connection = get_all_controller(id)
+                connection = get_all_controller(database, id)
                 pair = init_pair(request, connection[0])
                 print(1)
                 body = str.encode(''.join(pair.id), 'iso-8859-1')

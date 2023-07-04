@@ -1,0 +1,11 @@
+version: '3.5'
+
+services:
+  db_auth:
+    container_name: database
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_PASSWORD=Kyala
+      - POSTGRES_USER=postgres
+    image: postgres:15.3-bookworm

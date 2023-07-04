@@ -1,7 +1,8 @@
 import socket
 from email import parser
 import json
-from SQL_server.sql import *
+from ..SQL_server.sql import Database
+import init_db
 from typing import Any
 from data import *
 from request_processing import *
@@ -12,7 +13,8 @@ MAX_LINE = 64*1024
 MAX_HEADER = 100
 
 def main():
-    server = Server('10.0.41.165', 80, 'proxi')
+    server = Server('10.0.41.165', 4000, 'proxi')
+    server.create_connection_database('postgres', 'Kyala', 'Connection')
     server.server_forever()
 
 """Для начала хочу здесь реализовать API вида инициализации и создания пары"""
@@ -22,10 +24,12 @@ class Server:
         self.ip = ip
         self.port = port
         self.server_name = server_name
+    
+    def create_connection_database(self, user, password, db_name):
+        self.database = Database(self.ip, user, password, db_name)
 
     def server_forever(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, proto=0)
-
         try:
             server_socket.bind((self.ip, self.port))
             server_socket.listen()
@@ -113,7 +117,7 @@ class Server:
         return connect_handler(self.socket, request, id)
 
     def handle_init_device(self, request):
-        return init_handler(self.socket, request)
+        return init_handler(self.socket, request, self.database)
 
     def send_response(self, socket, response):
         wfile = socket.makefile('wb')

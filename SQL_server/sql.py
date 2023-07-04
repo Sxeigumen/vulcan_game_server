@@ -42,12 +42,29 @@ class Database:
         except Exception as er:
             self.Handler_Error(er)
 
+    def Count(self, table):
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(f"""SELECT COUNT(*) FROM {table};""")
+        except Exception as er:
+            self.Handler_Error(er)
+
+    def Select(self, table, poly_what = '*'):
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(f"""SELECT {poly_what} FROM {table};""")
+                raw = cursor.fetchone()
+                return raw
+        except Exception as er:
+            self.Handler_Error(er)
 
     def Select(self, table, poly_where, value, poly_what = '*'):
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(f"""SELECT {poly_what} FROM {table}
                               WHERE {poly_where} = '{value}';""")
+                raw = cursor.fetchone()
+                return raw
         except Exception as er:
             self.Handler_Error(er)
 
