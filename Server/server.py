@@ -2,7 +2,6 @@ import socket
 from email import parser
 import json
 from ..SQL_server.sql import Database
-import init_db
 from typing import Any
 from data import *
 from request_processing import *

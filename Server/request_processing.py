@@ -17,19 +17,13 @@ def get_all_controller(database, id_controller = 'all'):
         all_controller = database.Select('Controllers', 'id', id_controller)
     return all_controller
 
-def check_init_smartphone(data):
-    with open('localbd.txt', 'r') as file:
-        while True:
-            temp_string = file.readline()
-            if temp_string:
-                temp_list = temp_string.split(':')
-                #print((temp_list[2])[2:temp_list[2].rfind("'")])
-                #print(type(data.ip))
-                if data.ip[0] == (temp_list[2])[2:temp_list[2].rfind("'")]:
-                    return True
-            else:
-                break
-    return False
+def check_init_smartphone(data, database):
+    device_ip = data.headers.get('ip')
+    smartphone  = database.Select('Smartphones', 'ip', device_ip)
+    if not smartphone:
+        return False
+    else:
+        return True
 
 """Идея по поводу генерирования id, пусть они генерируются как для контроллера, так и для телефона(4 цифры к примеру)
 а потом уже при подключении просто объединяем их айдишникик и все, получаем айди соединения"""
@@ -53,33 +47,13 @@ def init_handler(socket, request, database):
         return response
 
 """надо перезаписывать"""
-def init_pair(data_smartphone, data_controller):
-    smartphone_id = ''
-    controller_id = ''
-    with open('localbd.txt', 'r') as file_read, open('localbd.tmp', 'w') as file_write:
-        while True:
-            temp_string = file_read.readline()
-            if temp_string:
-                if data_controller == temp_string:
-                    temp_string.replace('False', 'True')
-                    file_write.write(temp_string)
-                    temp_list = data_controller.split(':')
-                    controller_id = temp_list[1]
-                    continue
-                elif (data_smartphone.headers.get('Device') == temp_list[0] 
-                        and data_smartphone.ip[0] == (temp_list[2])[2:temp_list[2].rfind("'")]
-                        and temp_list[-1].rstrip('\n') == 'False'):
-                    temp_list = temp_string.split(':')
-                    temp_string.replace('False', 'True')
-                    file_write.write(temp_string)
-                    smartphone_id = temp_list[1]
-                else:
-                    file_write.write(temp_string)
-            else:
-                path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'localbd.txt')
-                os.remove(path)
-                os.rename('localbd.tmp', 'localbd.txt')
-                break
+def init_pair(data_smartphone, data_controller, database):
+    smartphone_ip = data_smartphone.headers.get('ip')
+    smartphone_id = database.Select_one('Smartphones', 'ip', smartphone_ip)[0]
+    controller_id = data_controller[0]
+    database.Update('Smartphones', 'connection', True, 'id', smartphone_id)
+    database.Update('Controllers', 'connection', True, 'id', controller_id)
+    database.Insert('Pairs', 'id_controller', 'id_smartphone', controller_id, smartphone_id)
     new_pair = DeviceConnection(smartphone_id+controller_id, smartphone_id, controller_id)
     return new_pair
 
@@ -106,8 +80,7 @@ def connect_handler(socket, request, database, id = 'all'):
                 return response
             else:
                 connection = get_all_controller(database, id)
-                pair = init_pair(request, connection[0])
-                print(1)
+                pair = init_pair(request, connection)
                 body = str.encode(''.join(pair.id), 'iso-8859-1')
                 headers = [('Content-Length', len(body))]
                 response = data.Response(201, 'Created', headers, body)

@@ -42,6 +42,14 @@ class Database:
         except Exception as er:
             self.Handler_Error(er)
 
+    def Update(self, table, poly, value, poly_where, value_where):
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(f"""UPDATE {table} SET {poly} = '{value}'
+                               WHERE {poly_where} = '{value_where}';""")
+        except Exception as er:
+            self.Handler_Error(er)
+
     def Count(self, table):
         try:
             with self.connection.cursor() as cursor:
@@ -49,16 +57,16 @@ class Database:
         except Exception as er:
             self.Handler_Error(er)
 
-    def Select(self, table, poly_what = '*'):
+    def Select_all(self, table, poly_what = '*'):
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(f"""SELECT {poly_what} FROM {table};""")
-                raw = cursor.fetchone()
+                raw = cursor.fetchall()
                 return raw
         except Exception as er:
             self.Handler_Error(er)
 
-    def Select(self, table, poly_where, value, poly_what = '*'):
+    def Select_one(self, table, poly_where, value, poly_what = '*'):
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(f"""SELECT {poly_what} FROM {table}
@@ -68,7 +76,7 @@ class Database:
         except Exception as er:
             self.Handler_Error(er)
 
-    def Select(self, table, poly_where, value1, value2, poly_what = '*'):
+    def Select_two(self, table, poly_where, value1, value2, poly_what = '*'):
         try:
             with self.connection.cursor() as cursor:
                 cursor.execute(f"""SELECT {poly_what} FROM {table}
