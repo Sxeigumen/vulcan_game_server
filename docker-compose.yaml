@@ -9,4 +9,8 @@ services:
       - POSTGRES_PASSWORD=Kyala
       - POSTGRES_USER=postgres
     image: postgres:15.3-bookworm
+    restart: always
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./SQL_server/init.sql:/docker-entrypoint-initdb.d/init.sql
   
