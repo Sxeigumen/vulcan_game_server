@@ -1,18 +1,18 @@
 import socket
 from email import parser
-import json
-from ..SQL_server.sql import Database
-from typing import Any
-from data import *
-from request_processing import *
-from functools import lru_cache
-from urllib.parse import parse_qs, urlparse
+import sys
+import os
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.dirname(SCRIPT_DIR))
+from SQL_server.sql import Database
+from data import Request, Response
+from request_processing import init_handler, connect_handler
 
 MAX_LINE = 64*1024
 MAX_HEADER = 100
 
 def main():
-    server = Server('10.0.41.165', 4000, 'proxi')
+    server = Server('127.0.0.1', 4000, 'proxi')
     server.create_connection_database('postgres', 'Kyala', 'Connection')
     server.server_forever()
 

@@ -1,10 +1,4 @@
 import psycopg2
-import sys
-
-host = '127.0.0.1'
-user = 'postgres'
-password = '*****'
-db_name = 'Connection'
 
 class Database:
     def __init__(self, host, user, password, db_name):
