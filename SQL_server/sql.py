@@ -5,6 +5,13 @@ class Database:
         self.connection = psycopg2.connect(host = host, user = user, password = password, database = db_name)
         self.connection.autocommit = True
 
+    def create_db(self):
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute("""CREATE DATABASE Connection;""")
+        except Exception as er:
+            self.Handler_Error(er)
+            
     def Create_tables(self):
         try:
             #Create table controller
@@ -65,7 +72,7 @@ class Database:
             with self.connection.cursor() as cursor:
                 cursor.execute(f"""SELECT {poly_what} FROM {table}
                               WHERE {poly_where} = '{value}';""")
-                raw = cursor.fetchone()
+                raw = cursor.fetchall()
                 return raw
         except Exception as er:
             self.Handler_Error(er)
@@ -75,6 +82,8 @@ class Database:
             with self.connection.cursor() as cursor:
                 cursor.execute(f"""SELECT {poly_what} FROM {table}
                             WHERE {poly_where} IN ('{value1}','{value2}');""")
+                raw = cursor.fetchall()
+                return raw
         except Exception as er:
             self.Handler_Error(er)
 

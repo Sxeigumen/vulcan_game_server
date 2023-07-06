@@ -7,13 +7,14 @@ sys.path.append(os.path.dirname(SCRIPT_DIR))
 from SQL_server.sql import Database
 from data import Request, Response
 from request_processing import init_handler, connect_handler
+import logg
 
 MAX_LINE = 64*1024
 MAX_HEADER = 100
 
 def main():
-    server = Server('127.0.0.1', 4000, 'proxi')
-    server.create_connection_database('postgres', 'Kyala', 'Connection')
+    server = Server('10.0.41.165', 80, 'proxi')
+    server.create_connection_database('postgres', 'Kyala', 'postgres')
     server.server_forever()
 
 """Для начала хочу здесь реализовать API вида инициализации и создания пары"""
@@ -25,7 +26,7 @@ class Server:
         self.server_name = server_name
     
     def create_connection_database(self, user, password, db_name):
-        self.database = Database(self.ip, user, password, db_name)
+        self.database = Database('127.0.0.1', user, password, db_name)
 
     def server_forever(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, proto=0)
@@ -38,9 +39,12 @@ class Server:
                 self.socket = new_socket
                 self.ip_connect = from_addr
                 try:
+                    print(from_addr)
                     self.server_client(new_socket)
+                    logg.server_logger.info(f'Successful connection: {from_addr}')
                 except Exception as e:
                     print('Client serving failed', e)
+                    logg.server_logger.exception(f'Client serving failed {from_addr}')
         finally:
             server_socket.close()
 
@@ -110,10 +114,10 @@ class Server:
                 return self.handle_get_controller(request, controller_id)
 
     def handle_get_controllers(self, request):
-        return connect_handler(self.socket, request)
+        return connect_handler(self.socket, request, self.database)
     
     def handle_get_controller(self, request, id):
-        return connect_handler(self.socket, request, id)
+        return connect_handler(self.socket, request, self.database, id)
 
     def handle_init_device(self, request):
         return init_handler(self.socket, request, self.database)

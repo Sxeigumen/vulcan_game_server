@@ -27,3 +27,5 @@ services:
 volumes:
   db:
     driver: local
+  nlogs:
+    driver: local

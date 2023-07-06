@@ -12,3 +12,7 @@ class LocalBdOverflow(Exception):
 class NotInitSmartphone(Exception):
     def __init__(self):
         self.type_error = "401(Not Init)"
+
+class ConnectAlreadyHave(Exception):
+    def __init__(self):
+        self.type_error = '402(Already had pair)'
