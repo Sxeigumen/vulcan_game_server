@@ -14,7 +14,7 @@ MAX_HEADER = 100
 
 def main():
     server = Server('10.0.41.165', 80, 'proxi')
-    server.create_connection_database('postgres', 'Kyala', 'postgres')
+    server.create_connection_database('postgres', 'Kyala', 'connections')
     server.server_forever()
 
 """Для начала хочу здесь реализовать API вида инициализации и создания пары"""

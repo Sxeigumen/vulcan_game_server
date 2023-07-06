@@ -11,8 +11,8 @@ services:
     image: postgres:15.3-bookworm
     restart: always
     volumes:
-      - db:/var/lib/postgresql/data
       - ./SQL_server/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres-data:/var/lib/postgresql/data
 
   nginx:
     container_name: nginx
@@ -25,7 +25,7 @@ services:
 
 
 volumes:
-  db:
+  postgres-data:
     driver: local
   nlogs:
     driver: local
