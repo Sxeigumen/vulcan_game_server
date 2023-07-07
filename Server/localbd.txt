@@ -1,4 +1,0 @@
-Controller:1515:('192.168.133.1', 121):False
-Controller:1511:('192.172.11.10', 120):False
-Controller:9999:('192.101.13.10', 8000):True
-Smartphone:7268:('127.0.0.1', 58382):False

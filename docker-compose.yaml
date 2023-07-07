@@ -13,7 +13,7 @@ services:
     restart: always
     networks:
       vulcan_server:
-        ipv4_address: 192.168.220.5
+        ipv4_address: 172.16.0.2
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
@@ -23,7 +23,7 @@ services:
     restart: always
     networks:
       vulcan_server:
-        ipv4_address: 192.168.220.3
+        ipv4_address: 172.16.0.3
 
   nginx:
     container_name: nginx
@@ -32,7 +32,7 @@ services:
       - "443:443"
     networks:
       vulcan_server:
-        ipv4_address: 192.168.220.4
+        ipv4_address: 172.16.0.4
     image: nginx:stable
     restart: always
     volumes:
@@ -49,5 +49,6 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 192.168.220.0/24
+        - subnet: 172.16.0.0/24
+          gateway: 172.16.0.1
 

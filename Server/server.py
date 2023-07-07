@@ -4,7 +4,7 @@ import sys
 import os
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
-from SQL_server.sql import Database
+from sql import Database
 from data import Request, Response
 from request_processing import init_handler, connect_handler
 import logg
@@ -13,7 +13,7 @@ MAX_LINE = 64*1024
 MAX_HEADER = 100
 
 def main():
-    server = Server('192.168.220.3', 8080, 'proxi')
+    server = Server('172.16.0.3', 8080, 'proxi')
     server.create_connection_database('postgres', 'Kyala', 'connection')
     server.server_forever()
 
@@ -26,7 +26,7 @@ class Server:
         self.server_name = server_name
     
     def create_connection_database(self, user, password, db_name):
-        self.database = Database('192.168.220.5', user, password, db_name)
+        self.database = Database('172.16.0.2', user, password, db_name)
 
     def server_forever(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, proto=0)
