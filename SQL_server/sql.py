@@ -87,6 +87,13 @@ class Database:
         except Exception as er:
             self.Handler_Error(er)
 
+    def Delete_table(self, table):
+        try:
+            with self.connection.cursor() as cursor:
+                cursor.execute(f"""DROP TABLE {table}""")
+        except Exception as er:
+            self.Handler_Error(er)
+
     def Handler_Error(self, error):
         self.connection.close()
         raise error

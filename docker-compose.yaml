@@ -7,38 +7,47 @@ services:
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_PASSWORD=Kyala
-      - POSTGRES_USER=postgres
-      - POSTGRES_DB=connection
-    image: postgres:15.3-bookworm
+      POSTGRES_PASSWORD: "Kyala"
+      POSTGRES_USER: "postgres"
+      POSTGRES_DB: "connection"
     restart: always
+    networks:
+      vulcan_server:
+        ipv4_address: 192.168.220.5
     volumes:
       - postgres-data:/var/lib/postgresql/data
 
-  pgadmin:
-    container_name: pgadmin_container
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin4@pgadmin.org}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    volumes:
-       - pgadmin:/var/lib/pgadmin
-    ports:
-      - "${PGADMIN_PORT:-5050}:80"
-    restart: unless-stopped
+  python_server:
+    build: Server/
+    container_name: Server
+    restart: always
+    networks:
+      vulcan_server:
+        ipv4_address: 192.168.220.3
 
   nginx:
     container_name: nginx
     ports:
       - "80:80"
+      - "443:443"
+    networks:
+      vulcan_server:
+        ipv4_address: 192.168.220.4
     image: nginx:stable
+    restart: always
     volumes:
-      - ./Nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./Nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - nlogs:/var/log/nginx
 
 
 volumes:
   postgres-data:
   nlogs:
-  pgadmin:
+
+networks:
+  vulcan_server:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.220.0/24
+

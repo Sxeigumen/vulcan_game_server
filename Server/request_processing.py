@@ -4,7 +4,7 @@ import data
 
 max_count_of_string = 10000
         
-def get_all_controller(database, id_controller):
+def get_all_controller(database, id_controller = 'all'):
     try:
         all_controller = list()
         if id_controller == 'all':

@@ -1,10 +1,10 @@
 from sql import Database
 
 def main():
-    host = '127.0.0.1'
+    host = '192.168.220.5'
     user = 'postgres'
     password = 'Kyala'
-    db_name = 'postgres'
+    db_name = 'connection'
     database = Database(host, user, password, db_name)
     #Insert(database)
     print(Select(database))
