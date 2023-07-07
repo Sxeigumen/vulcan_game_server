@@ -1,6 +1,3 @@
-CREATE DATABASE connections
-
-GRANT ALL PRIVILEGES ON DATABASE connections to "postgres";
 CREATE TABLE Controllers(
                 id serial PRIMARY KEY,
                 ip varchar(20) NOT NULL UNIQUE,

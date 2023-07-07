@@ -13,8 +13,8 @@ MAX_LINE = 64*1024
 MAX_HEADER = 100
 
 def main():
-    server = Server('10.0.41.165', 80, 'proxi')
-    server.create_connection_database('postgres', 'Kyala', 'connections')
+    server = Server('10.0.41.165', 8080, 'proxi')
+    server.create_connection_database('postgres', 'Kyala', 'connection')
     server.server_forever()
 
 """Для начала хочу здесь реализовать API вида инициализации и создания пары"""
