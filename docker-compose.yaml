@@ -1,8 +1,8 @@
-version: '3.5'
+version: '3.8'
 
 services:
   db_auth:
-    container_name: database
+    container_name: db_auth
     build: .
     ports:
       - "5432:5432"
@@ -13,31 +13,42 @@ services:
     restart: always
     networks:
       vulcan_server:
-        ipv4_address: 172.16.0.2
+        ipv4_address: 192.168.220.4
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ./base_data:/var/lib/postgresql/data
 
-  python_server:
+  server:
     build: Server/
-    container_name: Server
+    container_name: server
     restart: always
+    depends_on:
+      - db_auth
+    environment:
+      - DB_HOST=db_auth
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_NAME=connection
+      - DB_PASS=Kyala
+      - DEBUG=0
+    ports:
+      - "8080:8080"
     networks:
       vulcan_server:
-        ipv4_address: 172.16.0.3
+        ipv4_address: 192.168.220.3
 
-  nginx:
-    container_name: nginx
+  proxi:
+    container_name: proxi
     ports:
       - "80:80"
       - "443:443"
     networks:
       vulcan_server:
-        ipv4_address: 172.16.0.4
+        ipv4_address: 192.168.220.2
     image: nginx:stable
     restart: always
     volumes:
       - ./Nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - nlogs:/var/log/nginx
+      - ./logs:/var/log/nginx
 
 
 volumes:
@@ -49,6 +60,4 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.16.0.0/24
-          gateway: 172.16.0.1
-
+        - subnet: 192.168.220.0/24

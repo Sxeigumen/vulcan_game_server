@@ -11,13 +11,17 @@ import logg
 
 MAX_LINE = 64*1024
 MAX_HEADER = 100
+DB_HOST = os.environ.get('DB_HOST', 'localhost')
+DB_USER = os.environ.get('DB_USER', 'postres')
+DB_PORT = os.environ.get('DB_PORT', 5432)
+DB_NAME = os.environ.get('DB_NAME', 'connection')
+DB_PASS = os.environ.get('DB_PASS', 'Kyala')
 
 def main():
-    server = Server('172.16.0.3', 8080, 'proxi')
-    server.create_connection_database('postgres', 'Kyala', 'connection')
+    server = Server('192.168.220.3', 8080, 'proxi')
+    server.create_connection_database(DB_USER, DB_PASS, DB_NAME)
     server.server_forever()
 
-"""Для начала хочу здесь реализовать API вида инициализации и создания пары"""
 
 class Server:
     def __init__(self, ip, port, server_name):
@@ -26,7 +30,7 @@ class Server:
         self.server_name = server_name
     
     def create_connection_database(self, user, password, db_name):
-        self.database = Database('172.16.0.2', user, password, db_name)
+        self.database = Database('192.168.220.4', user, password, db_name)
 
     def server_forever(self):
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, proto=0)
@@ -37,7 +41,6 @@ class Server:
             while True:
                 new_socket, from_addr = server_socket.accept()
                 self.socket = new_socket
-                self.ip_connect = from_addr
                 try:
                     print(from_addr)
                     self.server_client(new_socket)
@@ -63,15 +66,15 @@ class Server:
     def parse_request(self, socket:socket.socket):
         rfile = socket.makefile('rb')
         method, uri, version = self.parse_request_line(rfile)
-        if version != 'HTTP/1.1':
-            raise Exception('Unexpected HTTP version')
         headers = self.parse_request_header(rfile)
         host = headers.get('Host')
+        if version != 'HTTP/1.1':
+            raise Exception(f'Unexpected HTTP version - {headers}')
         if not host:
             raise Exception('Bad request')
         if host not in (self.server_name, f'{self.ip}:{self.port}'):
-            raise Exception('Not right connection')
-        return Request(method, uri, version, headers, rfile, self.ip_connect)
+            raise Exception(f'Not right connection - exected {self.ip}:{self.port} not {host}')
+        return Request(method, uri, version, headers, rfile, headers.get('X-Forwarded-For'))
 
     def parse_request_header(self, rfile):
         headers = []
@@ -124,7 +127,7 @@ class Server:
 
     def send_response(self, socket, response):
         wfile = socket.makefile('wb')
-        status_line = f'HTTP/1.1 {response.status} {response.reason}\r\n'
+        status_line = f'HTTP/1.0 {response.status} {response.reason}\r\n'
         wfile.write(status_line.encode('iso-8859-1'))
         if response.headers:
             for (key, value) in response.headers:
